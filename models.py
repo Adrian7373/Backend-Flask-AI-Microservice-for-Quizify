@@ -27,6 +27,8 @@ class MultipleChoiceQuiz(BaseModel):
     title: str = Field(description="A catchy title for the generated quiz.")
     description: str = Field(
         description="A short description of the quiz content.")
+    difficulty: str = Field(
+        description="The difficulty level of the quiz: easy, normal, or hard")
     questions: list[MultipleChoiceQuestion]
 
 
@@ -52,6 +54,8 @@ class TrueFalseQuiz(BaseModel):
     title: str = Field(description="A catchy title for the generated quiz.")
     description: str = Field(
         description="A short description of the quiz content.")
+    difficulty: str = Field(
+        description="The difficulty level of the quiz: easy, normal, or hard")
     questions: list[TrueFalseQuestion]
 
 
@@ -78,4 +82,6 @@ class IdentificationQuiz(BaseModel):
     title: str = Field(description="A catchy title for the generated quiz.")
     description: str = Field(
         description="A short description of the quiz content.")
+    difficulty: str = Field(
+        description="The difficulty level of the quiz: easy, normal, or hard")
     questions: list[IdentificationQuestion]
