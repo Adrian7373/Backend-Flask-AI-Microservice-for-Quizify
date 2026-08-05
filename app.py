@@ -49,6 +49,7 @@ def generate_quiz():
         input_type = request.form.get('inputType', 'Text')
         quiz_type = request.form.get('quizType', 'Multiple Choice')
         question_count = request.form.get('questionCount', '5')
+        difficulty = request.form.get("difficulty", "normal")
 
         # 2. Validate Quiz Type & Select Schema
         target_schema = SCHEMA_MAP.get(quiz_type)
@@ -58,7 +59,9 @@ def generate_quiz():
         # 3. Build System Instructions & Generation Config
         system_instruction = (
             f"You are an assessment engine. Generate a {question_count}-question {quiz_type} quiz "
-            f"based strictly on the provided study material. Ensure all items are factually accurate."
+            f"at a '{difficulty}' difficulty level based strictly on the provided study material. "
+            f"Ensure all items are factually accurate. "
+            f"If 'easy', use basic recall. If 'normal', test comprehension. If 'hard', require deep analysis and critical thinking."
         )
 
         config = genai.types.GenerateContentConfig(
