@@ -22,6 +22,10 @@ class MultipleChoiceQuestion(BaseModel):
     explanation: str = Field(
         description="A brief explanation of why this answer is correct.")
 
+    timeLimitSeconds: int = Field(
+        description="The exact number of seconds the question should be answered based on difficulty of the question(Min:10, Max:120)"
+    )
+
 
 class MultipleChoiceQuiz(BaseModel):
     title: str = Field(description="A catchy title for the generated quiz.")
@@ -48,6 +52,10 @@ class TrueFalseQuestion(BaseModel):
 
     explanation: str = Field(
         description="Explanation of why the statement is true or false.")
+
+    timeLimitSeconds: int = Field(
+        description="The exact number of seconds the question should be answered based on difficulty of the question(Min:10, Max:120)"
+    )
 
 
 class TrueFalseQuiz(BaseModel):
@@ -76,6 +84,10 @@ class IdentificationQuestion(BaseModel):
 
     explanation: str = Field(
         description="Brief context or definition of the answer.")
+
+    timeLimitSeconds: int = Field(
+        description="The exact number of seconds the question should be answered based on difficulty of the question(Min:10, Max:120)"
+    )
 
 
 class IdentificationQuiz(BaseModel):
