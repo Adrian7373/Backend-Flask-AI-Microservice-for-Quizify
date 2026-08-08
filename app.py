@@ -130,3 +130,23 @@ def generate_quiz():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+@app.route('/api/insights', methods=['POST'])
+def generate_insights():
+    data = request.json
+    quiz_title = data.get('quizTitle')
+    questions = data.get('struggleQuestions')
+
+    prompt = f"""
+    You are an expert teacher's assistant. Analyze the following class performance data for a quiz titled "{quiz_title}". 
+    The students struggled most with these specific concepts:
+    
+    {questions}
+    
+    Write a brief, 2-paragraph summary directly to the teacher. 
+    Paragraph 1: Identify the likely root cause of the misconception based on the questions they missed.
+    Paragraph 2: Provide a concrete, 5-minute warm-up activity the teacher can use tomorrow to correct this gap.
+    
+    Keep the tone encouraging, professional, and directly actionable.
+    """
