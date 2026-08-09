@@ -50,6 +50,7 @@ def generate_quiz():
         quiz_type = request.form.get('quizType', 'Multiple Choice')
         question_count = request.form.get('questionCount', '5')
         difficulty = request.form.get("difficulty", "normal")
+        language = request.form.get("language", "English")
 
         # 2. Validate Quiz Type & Select Schema
         target_schema = SCHEMA_MAP.get(quiz_type)
@@ -60,6 +61,7 @@ def generate_quiz():
         system_instruction = (
             f"You are an assessment engine. Generate a {question_count}-question {quiz_type} quiz "
             f"at a '{difficulty}' difficulty level based strictly on the provided study material. "
+            f"CRITICAL LANGUAGE RULE: You MUST generate the entire quiz (questions, options, correct answers, and explanations) in {language}. If the source material is in a different language, translate the concepts accurately into {language}. "
             f"Ensure all items are factually accurate. "
             f"If 'easy', use basic recall. If 'normal', test comprehension. If 'hard', require deep analysis and critical thinking."
         )
