@@ -128,25 +128,63 @@ def generate_quiz():
                 logger.warning(f"Failed to remove temp file: {e}")
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
-
 @app.route('/api/insights', methods=['POST'])
 def generate_insights():
-    data = request.json
-    quiz_title = data.get('quizTitle')
-    questions = data.get('struggleQuestions')
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No JSON payload provided"}), 400
 
-    prompt = f"""
-    You are an expert teacher's assistant. Analyze the following class performance data for a quiz titled "{quiz_title}". 
-    The students struggled most with these specific concepts:
-    
-    {questions}
-    
-    Write a brief, 2-paragraph summary directly to the teacher. 
-    Paragraph 1: Identify the likely root cause of the misconception based on the questions they missed.
-    Paragraph 2: Provide a concrete, 5-minute warm-up activity the teacher can use tomorrow to correct this gap.
-    
-    Keep the tone encouraging, professional, and directly actionable.
-    """
+        quiz_title = data.get('quizTitle', 'Unknown Quiz')
+        questions = data.get('struggleQuestions', [])
+
+        if not questions:
+            return jsonify({"error": "No struggle questions provided"}), 400
+
+        # Format the raw JSON array into a readable string for the prompt
+        formatted_questions = ""
+        for i, q in enumerate(questions, 1):
+            formatted_questions += (
+                f"\nQuestion {i}: {q.get('questionText')}\n"
+                f"Correct Answer: {q.get('correctAnswer')}\n"
+                f"Class Accuracy: {q.get('accuracy')}%\n"
+            )
+
+        prompt = f"""
+        You are an expert teacher's assistant. Analyze the following class performance data for a quiz titled "{quiz_title}". 
+        The students struggled most with these specific concepts:
+        
+        {formatted_questions}
+        
+        Write a brief, 2-paragraph summary directly to the teacher. Do not use greetings like "Dear Teacher".
+        
+        Paragraph 1: Identify the likely root cause of the misconception based on the questions they missed. Look for the common thread.
+        Paragraph 2: Provide a concrete, 5-minute warm-up activity the teacher can use in the next class to correct this specific knowledge gap.
+        
+        Keep the tone encouraging, professional, and directly actionable.
+        """
+
+        logger.info(f"Generating class insights for quiz: '{quiz_title}'...")
+
+        # Use your existing Gemini client and model constant
+        ai_response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
+
+        return jsonify({
+            "success": True,
+            "insight": ai_response.text.strip()
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error generating insight: {str(e)}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "error": "An internal error occurred while generating insights."
+        }), 500
+
+
+# Make sure this stays at the very bottom of the file!
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
