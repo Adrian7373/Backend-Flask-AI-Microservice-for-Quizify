@@ -3,7 +3,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from google import genai
 import os
-from models import MultipleChoiceQuiz, TrueFalseQuiz, IdentificationQuiz
+from models import MultipleChoiceQuiz, TrueFalseQuiz, IdentificationQuiz, GradingResult, ShortAnswerQuiz
 import logging
 import tempfile
 
@@ -20,9 +20,10 @@ CORS(app)
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 SCHEMA_MAP = {
-    "Multiple Choice": MultipleChoiceQuiz,
-    "True/False": TrueFalseQuiz,
-    "Identification": IdentificationQuiz,
+    "MULTIPLE_CHOICE": MultipleChoiceQuiz,
+    "TRUE_FALSE": TrueFalseQuiz,
+    "IDETIFICATION": IdentificationQuiz,
+    "SHORT_ANSWER": ShortAnswerQuiz,
 }
 
 MODEL_NAME = "gemini-3.6-flash"
@@ -47,7 +48,7 @@ def generate_quiz():
     try:
         # 1. Parse incoming request parameters
         input_type = request.form.get('inputType', 'Text')
-        quiz_type = request.form.get('quizType', 'Multiple Choice')
+        quiz_type = request.form.get('quizType', 'MULTIPLE_CHOICE')
         question_count = request.form.get('questionCount', '5')
         difficulty = request.form.get("difficulty", "normal")
         language = request.form.get("language", "English")
@@ -187,6 +188,63 @@ def generate_insights():
         }), 500
 
 
-# Make sure this stays at the very bottom of the file!
+@app.route('/api/grade-answer', methods=['POST'])
+def grade_answer():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No JSON payload provided"}), 400
+
+        question_text = data.get('questionText')
+        rubric = data.get('rubric')  # The teacher's correct answer/concept
+        student_answer = data.get('studentAnswer')
+        # Support the language selector!
+        language = data.get('language', 'English')
+
+        if not all([question_text, rubric, student_answer]):
+            return jsonify({"error": "Missing required fields."}), 400
+
+        prompt = f"""
+        You are an expert, encouraging teacher grading a student's short answer response.
+        
+        Question: {question_text}
+        Target Concept/Rubric: {rubric}
+        Student's Answer: {student_answer}
+        
+        Task:
+        1. Evaluate how well the student understood the target concept.
+        2. Assign a score from 0 to 10.
+        3. Provide 1 to 2 sentences of direct feedback to the student explaining what they did well and what they missed.
+        
+        CRITICAL: The feedback MUST be written in {language}.
+        """
+
+        logger.info(
+            f"Grading short answer for question: '{question_text[:30]}...'")
+
+        # Force Gemini to output the exact Pydantic schema
+        config = genai.types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=GradingResult,
+            temperature=0.2,
+        )
+
+        ai_response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+            config=config
+        )
+
+        # Return the structured JSON directly to Next.js
+        return ai_response.text, 200, {'Content-Type': 'application/json'}
+
+    except Exception as e:
+        logger.error(f"Error grading answer: {str(e)}", exc_info=True)
+        return jsonify({
+            "error": "An internal error occurred during AI grading."
+        }), 500
+
+
+# This stays at the very bottom of the file
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
