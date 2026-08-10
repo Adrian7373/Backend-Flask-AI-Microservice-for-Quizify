@@ -97,3 +97,46 @@ class IdentificationQuiz(BaseModel):
     difficulty: str = Field(
         description="The difficulty level of the quiz: easy, normal, or hard")
     questions: list[IdentificationQuestion]
+
+
+# ==========================================
+# 3. SHORT ANSWER MODELS
+# ==========================================
+
+class ShortAnswerQuestion(BaseModel):
+    questionText: str = Field(
+        description="The essay or short answer prompt."
+    )
+
+    options: list[str] = Field(
+        default=[],
+        description="Must be an empty array for Short Answer questions."
+    )
+
+    correctAnswer: str = Field(
+        description="The grading rubric or core concept the student MUST include to get full credit. Be detailed.")
+
+    explanation: str = Field(
+        description="An explanation of why this concept is important.")
+
+    timeLimitSeconds: int = Field(
+        description="The exact number of seconds the question should be answered based on difficulty of the question(Min:10, Max:120)"
+    )
+
+
+class ShortAnswerQuiz(BaseModel):
+    title: str = Field(description="A catchy title for the generated quiz.")
+    description: str = Field(
+        description="A short description of the quiz content.")
+    difficulty: str = Field(
+        description="The difficulty level of the quiz: easy, normal, or hard")
+    questions: list[IdentificationQuestion]
+
+
+class GradingResult(BaseModel):
+    score: int = Field(
+        description="Score from 0 to 10 based on accuracy and comprehension.")
+    is_correct: bool = Field(
+        description="True if score is 6 or higher, False otherwise.")
+    feedback: str = Field(
+        description="1-2 sentences of encouraging, specific feedback for the student.")
