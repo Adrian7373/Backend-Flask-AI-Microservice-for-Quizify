@@ -163,10 +163,9 @@ def generate_insights():
         
         {formatted_questions}
         
-        Write a brief, 2-paragraph summary directly to the teacher. Do not use greetings like "Dear Teacher".
+        Write a brief, 3 sentences summary directly to the teacher. Do not use greetings like "Dear Teacher".
         
-        Paragraph 1: Identify the likely root cause of the misconception based on the questions they missed. Look for the common thread.
-        Paragraph 2: Provide a concrete, 5-minute warm-up activity the teacher can use in the next class to correct this specific knowledge gap.
+        Identify the likely root cause of the misconception based on the questions they missed. Look for the common thread.
         
         Keep the tone encouraging, professional, and directly actionable.
         """
