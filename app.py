@@ -3,7 +3,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from google import genai
 import os
-from models import MultipleChoiceQuiz, TrueFalseQuiz, IdentificationQuiz, GradingResult, ShortAnswerQuiz
+from models import MultipleChoiceQuiz, TrueFalseQuiz, IdentificationQuiz, GradingResult, EssayQuiz
 import logging
 import tempfile
 
@@ -23,10 +23,10 @@ SCHEMA_MAP = {
     "MULTIPLE_CHOICE": MultipleChoiceQuiz,
     "TRUE_FALSE": TrueFalseQuiz,
     "IDETIFICATION": IdentificationQuiz,
-    "SHORT_ANSWER": ShortAnswerQuiz,
+    "ESSAY": EssayQuiz,
 }
 
-MODEL_NAME = "gemini-3.6-flash"
+MODEL_NAME = "gemini-3.1-flash-lite"
 
 
 def process_file_upload(file_obj) -> tuple[str, str]:
@@ -62,6 +62,10 @@ def generate_quiz():
         system_instruction = (
             f"You are an assessment engine. Generate a {question_count}-question {quiz_type} quiz "
             f"at a '{difficulty}' difficulty level based strictly on the provided study material. "
+            f"""CRITICAL DIFFICULTY RULES for '{difficulty}' mode:
+        - 'easy': Target 5th-grade reading level. Use simple vocabulary. Prompts should be very direct.
+        - 'normal': Target 9th-grade high school level. Standard vocabulary.
+        - 'hard': Target college level. Require deep critical thinking."""
             f"CRITICAL LANGUAGE RULE: You MUST generate the entire quiz (questions, options, correct answers, and explanations) in {language}. If the source material is in a different language, translate the concepts accurately into {language}. "
             f"Ensure all items are factually accurate. "
             f"If 'easy', use basic recall. If 'normal', test comprehension. If 'hard', require deep analysis and critical thinking."
@@ -205,19 +209,23 @@ def grade_answer():
             return jsonify({"error": "Missing required fields."}), 400
 
         prompt = f"""
-        You are an expert, encouraging teacher grading a student's short answer response.
-        
-        Question: {question_text}
-        Target Concept/Rubric: {rubric}
-        Student's Answer: {student_answer}
-        
-        Task:
-        1. Evaluate how well the student understood the target concept.
-        2. Assign a score from 0 to 10.
-        3. Provide 1 to 2 sentences of direct feedback to the student explaining what they did well and what they missed.
-        
-        CRITICAL: The feedback MUST be written in {language}.
-        """
+    You are an encouraging, compassionate teacher evaluating a student's essay response.
+    
+    Question: {question_text}
+    Teacher's Rubric: {rubric}
+    Student's Answer: {student_answer}
+    
+    GRADING INSTRUCTIONS:
+    1. Be highly considerate. Do not demand exact vocabulary or perfect grammar. If the student demonstrates a clear conceptual understanding of the rubric's core ideas, consider it correct.
+    2. Award partial credit generously. Look for what the student got right, rather than punishing them for what they missed.
+    3. Determine if the answer passes the threshold for 'is_correct' (a score of 6 or higher means True).
+    4. Score out of 10:
+       - 9 to 10: Grasps the core concept perfectly, even if using their own words.
+       - 6 to 8: Understands part of the concept, but missing a key detail.
+       - 1 to 5: Tried, but fundamentally misunderstood the topic.
+       - 0: Completely blank or entirely off-topic.
+    5. Provide warm, constructive feedback in {language}. Always validate their effort first before gently correcting misconceptions.
+    """
 
         logger.info(
             f"Grading short answer for question: '{question_text[:30]}...'")
