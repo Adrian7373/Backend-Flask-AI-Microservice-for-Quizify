@@ -22,7 +22,7 @@ client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 SCHEMA_MAP = {
     "MULTIPLE_CHOICE": MultipleChoiceQuiz,
     "TRUE_FALSE": TrueFalseQuiz,
-    "IDETIFICATION": IdentificationQuiz,
+    "IDENTIFICATION": IdentificationQuiz,
     "ESSAY": EssayQuiz,
 }
 
