@@ -11,6 +11,8 @@ class MultipleChoiceQuestion(BaseModel):
 
     # This matches the `options` JSON array in Prisma
     options: list[str] = Field(
+        min_length=4,
+        max_length=4,
         description="Exactly 4 possible answers. Do not include letter prefixes like 'A)' or 'B)'."
     )
 
